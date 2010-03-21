@@ -11,7 +11,7 @@ TODO: ordering functionality to raise and lower items being output. how? reorder
 TODO: styling for output, and seperate front facing css sheet with icons.
 */
 
-define('SLW_VER', 0.1);
+define( 'SLW_VER', 0.1 );
 
 /* Set constant path to the SLW plugin directory. */
 define( SLW_DIR, plugin_dir_path( __FILE__ ) );
@@ -19,43 +19,49 @@ define( SLW_DIR, plugin_dir_path( __FILE__ ) );
 /* Set constant path to the SLW plugin URL. */
 define( SLW_URL, plugin_dir_url( __FILE__ ) );
 
+// Register Scripts and Styles
+wp_register_script( 'autoresize.jquery', SLW_URL . '/js/autoresize.jquery.min.js', array('jquery'), '1.04');
+wp_register_script( 'jquery.color', SLW_URL . '/js/jquery.color.js', array('jquery'), '1');
+
+wp_register_script( 'slw_widget_js', SLW_URL . '/js/SLW_func.js', array('jquery','autoresize.jquery','jquery.color'), '0.1'); //,'autoresize.jquery','jquery.autofill'
+wp_register_style( 'slw_widget_styles', SLW_URL . '/css/SLW_styles.css', null,  '0.1', 'screen' );
+wp_register_style( 'slw_frontend_styles', SLW_URL . '/css/SLW_FE_styles.css', null,  '0.1', 'screen' );
+
+
 /* Launch the plugin. */
 add_action( 'plugins_loaded', 'slw_plugin_init' );
 
 function slw_plugin_init(){
 	// ini widget
-	add_action('widgets_init', create_function('', 'return register_widget("Social_Links_Widgets");'));
+	add_action( 'widgets_init', create_function('', 'return register_widget("Social_Links_Widgets");') );
 }
 
 class Social_Links_Widgets extends WP_Widget{
 	
 	// array of networks and their icon links
 	var $types = array(
-		'facebook' => array('Facebook','http://facebook.com/'),
-		'youtube' => array('youtube', 'http://youtube.com/'),
-		'twitter' => array('twitter', 'http://twitter.com/'),
+		'facebook'	=> array('Facebook','http://facebook.com/'),
+		'youtube'		=> array('youtube', 'http://youtube.com/'),
+		'twitter'		=> array('twitter', 'http://twitter.com/'),
+		'rss'				=> array('RSS', ''),
 	);
 	
 	function Social_Links_Widgets() {
 			$widget_ops = array('description' => __( "Add your social links to your website's sidebar" ) );
 			
 			// Add admin_header CSS and JS
-			add_action( 'admin_head', array( &$this, 'header_css_js' ) );
+			global $pagenow;
+			
+			if( is_admin() and $pagenow == 'widgets.php'): // js and css for admin area. TODO: find out how to only output on widgets page.
+				wp_enqueue_script('slw_widget_js');
+				wp_enqueue_style('slw_widget_styles');
+			else: // load styles and scripts for theme.
+				//wp_enqueue_style('slw_frontend_styles');
+			endif;
 			
       parent::WP_Widget(false, 'Social Links', $widget_ops);	
   }
   
-  function header_css_js(){
-	  // TODO: check to see if we are on the widgets page.
-  	?>
-  	
-  	<!-- Social Links Widget CSS and JS -->
-  	<link rel="stylesheet" href="<?=SLW_URL?>SLW_styles.css" type="text/css" media="screen" />  	
-  	<script type="text/javascript" src="<?=SLW_URL?>SLW_func.js" ></script>
-  	<?
-  }
-  
-  //
 	function widget($args, $instance) {
 	
 	  extract( $args );
@@ -69,7 +75,12 @@ class Social_Links_Widgets extends WP_Widget{
 		echo '<ul>';
 			
 			foreach( $s_links as $link ):
-				print_r($link);
+			
+				extract($link);
+				echo '<li class="'.$type.'">';
+				echo '<a href="'.$link.'" >'.$text.'</a>';
+				//print_r($link);
+				echo '</li>';
 			endforeach;
 			
 		echo '</ul>';
@@ -83,10 +94,10 @@ class Social_Links_Widgets extends WP_Widget{
 		
 		// TODO check for new social link and add it.
 		if( $new_type = $new_instance['add_link'] ):
-			$new_id = substr( md5(rand(0,5)), 0, 4); 
+			$new_id = substr( md5(rand(0,5)), 0, 4); // rand identifyer for link
 			$new_instance['social_links_texts'][$new_id] = array(
 				'type' => $new_type,
-				'link' => $this->types[$new_type][1],
+				'link' => $this->types[$new_type][1], // assign default link for type
 				'text' => ''
 				);
 			
@@ -97,14 +108,12 @@ class Social_Links_Widgets extends WP_Widget{
 		foreach( $links as $id => $val):
 			// check to see if we are being deleted, in which case don't update == removed
 			if(!$val['delete'])
-			$new_instance['social_links_texts'][$id] = array_merge( $old_instance['social_links_texts'][$id], (array) $val );
+				$new_instance['social_links_texts'][$id] = array_merge( $old_instance['social_links_texts'][$id], (array) $val );
 			
 		endforeach;
 		
 		// don't need links saved.
 		unset($new_instance['links']);
-		
-		// print_r($new_instance);
 		
 		return $new_instance;
 	}
