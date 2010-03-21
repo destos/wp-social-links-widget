@@ -3,7 +3,7 @@
 Plugin Name: Social Links Widgets
 Plugin URI: http://patrick.forringer.com/wordpress/plugin/SLW
 Description: Allows you to place social media links in your sidebar in an organized fasion.
-Version: 0.1
+Version: 0.2
 Author: Patrick Forringer
 Author URI: http://patrick.forringer.com
 
@@ -11,7 +11,7 @@ TODO: ordering functionality to raise and lower items being output. how? reorder
 TODO: styling for output, and seperate front facing css sheet with icons.
 */
 
-define( 'SLW_VER', 0.1 );
+define( 'SLW_VER', 0.2);
 
 /* Set constant path to the SLW plugin directory. */
 define( SLW_DIR, plugin_dir_path( __FILE__ ) );
